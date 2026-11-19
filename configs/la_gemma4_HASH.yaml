@@ -1,0 +1,80 @@
+# HASH: encode raw lat/lon as a Base32 geohash (length 9, ~2.4 m) as prompt text.
+# normalize_coordinates must stay false: geohash is defined on WGS-84 degrees.
+data:
+  training_data: data/LA_training.csv
+  test_data: data/LA_test.csv
+  input_format: csv
+  id_col: id
+  latitude_col: latitude
+  longitude_col: longitude
+  description_col: description
+  normalize_coordinates: false
+  max_train_samples: 10000
+  max_eval_samples: 256
+model:
+  base_model: google/gemma-4-12B-it
+  geo_token: <GEO>
+  text_dim: 2560
+  geo_hidden_dim: 4096
+  geo_projector_hidden_dim: 2048
+  num_freqs: 36
+  geo_log_sampling: false
+  trust_remote_code: true
+  torch_dtype: bfloat16
+  attn_implementation:
+  gradient_checkpointing: true
+  use_cache_during_training: false
+  spatial_representation: HASH
+  geohash_length: 9
+lora:
+  enabled: true
+  r: 64
+  alpha: 128
+  dropout: 0.05
+  target_modules:
+  freeze_base_model: true
+  tuning_embedding: false
+runtime:
+  cuda_visible_devices:
+train:
+  output_dir: outputs/checkpoints/la_HASH
+  init_from_checkpoint:
+  epochs: 100
+  batch_size: 16
+  learning_rate: 1.0e-05
+  weight_decay: 0.0
+  geo_learning_rate_multiplier: 10.0
+  lr_scheduler_type: constant
+  warmup_ratio: 0.03
+  encoder_only_epochs: 0
+  gradient_accumulation_steps: 12
+  max_grad_norm: 1.0
+  num_workers: 6
+  mixed_precision: bf16
+  log_every: 20
+  save_every_epochs: 1
+  eval_every_epochs: 20
+  eval_num_samples: 256
+  eval_sentence_model: all-MiniLM-L6-v2
+  save_on_eval_improvement: true
+  seed: 42
+  compile_model: false
+generation:
+  batch_size: 128
+  max_new_tokens: 384
+  temperature: 0.8
+  top_k: 30
+  top_p: 0.95
+  do_sample: true
+  generations_per_coordinate: 4
+  output: outputs/generations/la_HASH.pkl
+  use_test_coordinates: true
+  checkpoint: outputs/checkpoints/la_HASH/best
+reasoning:
+  enabled: false
+  max_thinking_descriptions: 5
+  shuffle_thinking_descriptions: true
+  thinking_open_tag:
+  thinking_close_tag:
+  thinking_join: ','
+  answer_prefix: ''

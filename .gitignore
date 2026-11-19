@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+.env
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# Training artifacts (keep directory via .gitkeep)
+outputs/checkpoints/**
+outputs/generations/**
+!outputs/**/.gitkeep
+
+# Local caches / logs
+*.log
+.cache/
+wandb/
+runs/
